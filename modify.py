@@ -63,5 +63,3 @@ class ModifyEquipementDialog(QDialog):
             print(f"The error '{e}' occurred")
 
 
-def delete_row(self):
-    pass

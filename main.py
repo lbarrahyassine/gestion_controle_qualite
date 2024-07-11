@@ -43,12 +43,12 @@ class App(QWidget):
             for j, item in enumerate(row):
                 table.setItem(i, j, QTableWidgetItem(str(item)))
             modify_button = QPushButton("Modify")
-            modify_button.clicked.connect(lambda _, r=i: self.modify_row(r))  # Connect to your modify function
+            modify_button.clicked.connect(lambda _, r=i: ModifyEquipementDialog.modify_row(r))  # Connect to your modify function
             table.setCellWidget(i, len(headers), modify_button)
 
             # Create Delete button
             delete_button = QPushButton("Delete")
-            #delete_button.clicked.connect(self.delete_row)  # Connect to your delete function
+            delete_button.clicked.connect(lambda _, r=i: self.delete_row(r))  # Connect to your delete function
             table.setCellWidget(i, len(headers) + 1, delete_button)
         return table
 
@@ -74,7 +74,7 @@ class App(QWidget):
 
             # Create Delete button
             delete_button = QPushButton("Delete")
-            # delete_button.clicked.connect(self.delete_row)  # Connect to your delete function
+            delete_button.clicked.connect(lambda _, r=i: self.delete_row(r))  # Connect to your delete function
             self.equipements_table.setCellWidget(i, len(["id", "Libelle", "id_sous_cat","date_service","actif","rebut","id_energie"]) + 1, delete_button)
 
     def equipement_win(self):
@@ -95,6 +95,7 @@ class App(QWidget):
     def open_add_dialog(self):
         dialog = AddEquipementDialog(self)
         dialog.exec_()
+        self.refresh_equipements()
 
     def show_add_cat_dialog(self):
         dialog = QDialog(self)
@@ -116,6 +117,18 @@ class App(QWidget):
         widget.setLayout(layout)
         return widget
 
+    def delete_row(self, row):
+        print("clicked")
+        equipement_id = self.equipements_table.item(row, 0).text()
+        print(equipement_id)
+        try:
+            cursor = connection.cursor()
+            cursor.execute("DELETE FROM equipement WHERE id = %s", (equipement_id,))
+            connection.commit()
+            cursor.close()  
+            self.equipements_table.removeRow(row)
+        except Error as e:
+            print(f"The error '{e}' occurred")
 
 
 class AddEquipementDialog(QDialog):

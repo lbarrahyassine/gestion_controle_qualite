@@ -15,6 +15,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(400, 300)
+        Dialog.setWindowTitle("ajouter une categorie")
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setGeometry(QtCore.QRect(100, 240, 193, 28))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
