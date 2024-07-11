@@ -47,7 +47,7 @@ def fetch_sous_categories():
     cursor.execute("SELECT * FROM Sous_Categorie")
     sous_categories = cursor.fetchall()
     cursor.close()
-    for sous_cat in categories:
+    for sous_cat in sous_categories:
         print(sous_cat)
     return sous_categories
 
@@ -62,5 +62,5 @@ def fetch_equipements():
 
 #print(execute_read_query(connection,"SELECT * FROM sous_Categorie"))
 
-fetch_categories()
-print(fetch_sous_categories())
+#fetch_equipements()
+#print(fetch_sous_categories())
