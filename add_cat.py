@@ -57,7 +57,7 @@ class Ui_Dialog(object):
             cursor.close()
         except Error as e:
             print(f"The error '{e}' occurred")
-        self.accept()
+        self.buttonBox.parent().accept()
 
 
 

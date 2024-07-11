@@ -3,6 +3,8 @@ import sys
 from PyQt5.QtWidgets import *
 from add_cat import *
 from modify import *
+from modify_category import *
+from Add_equi import *
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -26,14 +28,14 @@ class App(QWidget):
         self.tab_widget = QTabWidget()
         self.tab_widget.addTab(self.equipement_win(), "Equipements")
         self.tab_widget.addTab(self.categ_win(), "Categories")
-        self.tab_widget.addTab(self.create_table(fetch_sous_categories(), ["id", "Libelle", "id_cat"]), "Sous Categories")
+        self.tab_widget.addTab(self.create_table(fetch_sous_categories(), ["id", "Libelle", "id_cat"],"sous_cat"), "Sous Categories")
 
 
         layout.addWidget(self.tab_widget)
 
         self.setLayout(layout)
 
-    def create_table(self, data, headers):
+    def create_table(self, data, headers, context):
         table = QTableWidget()
         table.setRowCount(len(data))
         table.setColumnCount(len(headers)+2)
@@ -43,12 +45,20 @@ class App(QWidget):
             for j, item in enumerate(row):
                 table.setItem(i, j, QTableWidgetItem(str(item)))
             modify_button = QPushButton("Modify")
-            modify_button.clicked.connect(lambda _, r=i: ModifyEquipementDialog.modify_row(r))  # Connect to your modify function
+            if context == "equipement":
+                modify_button.clicked.connect(lambda _, r=i: self.modify_row(r))
+            elif context == "categorie":
+                modify_button.clicked.connect(lambda _, r=i: self.modify_category_row(r))
+            #modify_button.clicked.connect(lambda _, r=i: ModifyEquipementDialog.modify_row(r))  # Connect to your modify function
             table.setCellWidget(i, len(headers), modify_button)
 
             # Create Delete button
             delete_button = QPushButton("Delete")
-            delete_button.clicked.connect(lambda _, r=i: self.delete_row(r))  # Connect to your delete function
+            if context == "equipement":
+                delete_button.clicked.connect(lambda _, r=i: self.delete_row(r))
+            elif context == "categorie":
+                delete_button.clicked.connect(lambda _, r=i: self.delete_category_row(r))
+            #delete_button.clicked.connect(lambda _, r=i: self.delete_row(r))  # Connect to your delete function
             table.setCellWidget(i, len(headers) + 1, delete_button)
         return table
 
@@ -81,7 +91,7 @@ class App(QWidget):
         widget = QWidget()
         layout = QVBoxLayout()
 
-        self.equipements_table = self.create_table(fetch_equipements(), ["id", "Libelle", "id_sous_cat","date_service","actif","rebut","id_energie"])
+        self.equipements_table = self.create_table(fetch_equipements(), ["id", "Libelle", "id_sous_cat","date_service","actif","rebut","id_energie"],"equipement")
         layout.addWidget(self.equipements_table)
 
         ajouter_button = QPushButton("Ajouter")
@@ -102,12 +112,13 @@ class App(QWidget):
         ui = Ui_Dialog()
         ui.setupUi(dialog)
         dialog.exec_()
+        self.refresh_categories()
 
     def categ_win(self):
         widget = QWidget()
         layout = QVBoxLayout()
 
-        self.categorie_table = self.create_table(fetch_categories(), ["id", "Libelle"])
+        self.categorie_table = self.create_table(fetch_categories(), ["id", "Libelle"], "categorie")
         layout.addWidget(self.categorie_table)
 
         ajouter_button2 = QPushButton("Ajouter")
@@ -118,7 +129,7 @@ class App(QWidget):
         return widget
 
     def delete_row(self, row):
-        print("clicked")
+        print("delete equipement is clicked")
         equipement_id = self.equipements_table.item(row, 0).text()
         print(equipement_id)
         try:
@@ -130,58 +141,37 @@ class App(QWidget):
         except Error as e:
             print(f"The error '{e}' occurred")
 
+    def modify_category_row(self, row):
+        dialog = ModifyCategoryDialog(self, row, self.categorie_table)
+        dialog.exec_()
+        self.refresh_categories()
 
-class AddEquipementDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Ajouter un Equipement")
-
-        self.layout = QFormLayout()
-
-        self.libelle_input = QLineEdit()
-        self.id_sous_cat_input = QLineEdit()
-        self.date_service_input = QLineEdit()
-        self.actif_input = QLineEdit()
-        self.rebut_input = QLineEdit()
-        self.id_energie_input = QLineEdit()
-
-        self.layout.addRow("Libelle:", self.libelle_input)
-        self.layout.addRow("ID Sous Cat:", self.id_sous_cat_input)
-        self.layout.addRow("Date Service:", self.date_service_input)
-        self.layout.addRow("Actif:", self.actif_input)
-        self.layout.addRow("Rebut:", self.rebut_input)
-        self.layout.addRow("ID Energie:", self.id_energie_input)
-
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.buttons.accepted.connect(self.add_equipement)
-        self.buttons.rejected.connect(self.reject)
-
-        self.layout.addWidget(self.buttons)
-        self.setLayout(self.layout)
-
-    def add_equipement(self):
-        libelle = self.libelle_input.text()
-        id_sous_cat = self.id_sous_cat_input.text()
-        date_service = self.date_service_input.text()
-        actif = self.actif_input.text()
-        rebut = self.rebut_input.text()
-        id_energie = self.id_energie_input.text()
-
-        # Here you should add the code to insert this data into your database
-        # Example:
+    def delete_category_row(self, row):
+        category_id = self.categorie_table.item(row, 0).text()
         try:
             cursor = connection.cursor()
-            cursor.execute(
-                "INSERT INTO equipement (Libele, id_sous_cat, date_service, actif, rebut, id_energie) VALUES (%s, %s, %s, %s, %s, %s)",
-                (libelle, id_sous_cat, date_service, actif, rebut, id_energie))
+            cursor.execute("DELETE FROM categorie WHERE id_cat = %s", (category_id,))
             connection.commit()
             cursor.close()
+            self.categorie_table.removeRow(row)
         except Error as e:
             print(f"The error '{e}' occurred")
+        print("delete cat is clicked")
+    def refresh_categories(self):
+        data = fetch_categories()
+        self.categorie_table.setRowCount(0)
+        self.categorie_table.setRowCount(len(data))
 
-        self.accept()
+        for i, row in enumerate(data):
+            for j, item in enumerate(row):
+                self.categorie_table.setItem(i, j, QTableWidgetItem(str(item)))
+            modify_button = QPushButton("Modify")
+            modify_button.clicked.connect(lambda _, r=i: self.modify_category_row(r))
+            self.categorie_table.setCellWidget(i, len(["id", "Libelle"]), modify_button)
 
-
+            delete_button = QPushButton("Delete")
+            delete_button.clicked.connect(lambda _, r=i: self.delete_category_row(r))
+            self.categorie_table.setCellWidget(i, len(["id", "Libelle"]) + 1, delete_button)
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
