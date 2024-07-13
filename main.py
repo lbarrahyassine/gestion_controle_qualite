@@ -6,6 +6,7 @@ from modify import *
 from modify_category import *
 from Add_equi import *
 import warnings
+from PyQt5.QtCore import Qt
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class App(QWidget):
@@ -18,22 +19,39 @@ class App(QWidget):
         self.height = 600
         self.initUI()
 
-
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
         layout = QVBoxLayout()
 
+        # Create a placeholder widget
         self.tab_widget = QTabWidget()
-        self.tab_widget.addTab(self.equipement_win(), "Equipements")
-        self.tab_widget.addTab(self.categ_win(), "Categories")
-        self.tab_widget.addTab(self.sous_categorie_win(), "Sous Categories")
+        placeholder = QWidget()
+        placeholder_layout = QVBoxLayout()
 
+        # Create a label for the placeholder
+        placeholder_label = QLabel("Select a tab from the menu.")
+        font = placeholder_label.font()
+        font.setPointSize(22)  # Set font size
+        placeholder_label.setFont(font)
+        placeholder_label.setAlignment(Qt.AlignCenter)  # Center the text
+        placeholder_label.setStyleSheet("padding: 10px;")  # Additional styling
+
+        placeholder_layout.addWidget(placeholder_label)
+        placeholder.setLayout(placeholder_layout)
+
+        # Add placeholder widget as the only initial tab
+        self.tab_widget.addTab(placeholder, "Home")
 
         layout.addWidget(self.tab_widget)
-
         self.setLayout(layout)
+
+        # Initialize other tabs without adding them to the tab widget yet
+        self.equipement_tab = self.equipement_win()
+        self.categorie_tab = self.categ_win()
+        self.sous_categorie_tab = self.sous_categorie_win()
+
 
     def create_table(self, data, headers, context):
         table = QTableWidget()
@@ -167,7 +185,7 @@ class App(QWidget):
             cursor = connection.cursor()
             cursor.execute("DELETE FROM equipement WHERE id = %s", (equipement_id,))
             connection.commit()
-            cursor.close()  
+            cursor.close()
             self.equipements_table.removeRow(row)
         except Error as e:
             print(f"The error '{e}' occurred")
@@ -204,6 +222,20 @@ class App(QWidget):
             delete_button = QPushButton("Delete")
             delete_button.clicked.connect(lambda _, r=i: self.delete_category_row(r))
             self.categorie_table.setCellWidget(i, len(["id", "Libelle"]) + 1, delete_button)
+
+    def open_equipement_tab(self):
+        self.tab_widget.addTab(self.equipement_tab, "Equipements")  # Add tab if not already added
+        self.tab_widget.setCurrentWidget(self.equipement_tab)
+
+    def open_categorie_tab(self):
+        self.tab_widget.addTab(self.categorie_tab, "Categories")  # Add tab if not already added
+        self.tab_widget.setCurrentWidget(self.categorie_tab)
+
+    def open_sous_categorie_tab(self):
+        self.tab_widget.addTab(self.sous_categorie_tab, "Sous Categories")  # Add tab if not already added
+        self.tab_widget.setCurrentWidget(self.sous_categorie_tab)
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
