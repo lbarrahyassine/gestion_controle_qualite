@@ -28,7 +28,7 @@ class App(QWidget):
         self.tab_widget = QTabWidget()
         self.tab_widget.addTab(self.equipement_win(), "Equipements")
         self.tab_widget.addTab(self.categ_win(), "Categories")
-        self.tab_widget.addTab(self.create_table(fetch_sous_categories(), ["id", "Libelle", "id_cat"],"sous_cat"), "Sous Categories")
+        self.tab_widget.addTab(self.sous_categorie_win(), "Sous Categories")
 
 
         layout.addWidget(self.tab_widget)
@@ -49,6 +49,9 @@ class App(QWidget):
                 modify_button.clicked.connect(lambda _, r=i: self.modify_row(r))
             elif context == "categorie":
                 modify_button.clicked.connect(lambda _, r=i: self.modify_category_row(r))
+            elif context == "sous_categorie":
+                modify_button.clicked.connect(lambda _, r=i: self.modify_sous_categorie_row(r))
+            table.setCellWidget(i, len(headers), modify_button)
             #modify_button.clicked.connect(lambda _, r=i: ModifyEquipementDialog.modify_row(r))  # Connect to your modify function
             table.setCellWidget(i, len(headers), modify_button)
 
@@ -58,6 +61,9 @@ class App(QWidget):
                 delete_button.clicked.connect(lambda _, r=i: self.delete_row(r))
             elif context == "categorie":
                 delete_button.clicked.connect(lambda _, r=i: self.delete_category_row(r))
+            elif context == "sous_categorie":
+                modify_button.clicked.connect(lambda _, r=i: self.delete_sous_categorie_row(r))
+            table.setCellWidget(i, len(headers), modify_button)
             #delete_button.clicked.connect(lambda _, r=i: self.delete_row(r))  # Connect to your delete function
             table.setCellWidget(i, len(headers) + 1, delete_button)
         return table
@@ -101,7 +107,32 @@ class App(QWidget):
         widget.setLayout(layout)
         return widget
 
+    def sous_categorie_win(self):
+        widget = QWidget()
+        layout = QVBoxLayout()
 
+        self.sous_categorie_table = self.create_table(fetch_sous_categories(), ["id", "Libelle", "id_cat"],
+                                                      "sous_categorie")
+        layout.addWidget(self.sous_categorie_table)
+
+        widget.setLayout(layout)
+        return widget
+    def delete_sous_categorie_row(self, row):
+        sous_categorie_id = self.sous_categorie_table.item(row, 0).text()
+        category_id = self.sous_categorie_table.item(row, 2).text()
+        try:
+            cursor = connection.cursor()
+            cursor.execute("DELETE FROM sous_categorie WHERE id_sous_cat = %s", (sous_categorie_id,))
+            #cursor.execute("DELETE FROM categorie WHERE id_cat = %s", (category_id,))
+            connection.commit()
+            cursor.close()
+            self.sous_categorie_table.removeRow(row)
+        except Error as e:
+            print(f"The error '{e}' occurred")
+        print("delete sous_categorie and its category is clicked")
+
+    def modify_sous_categorie_row(self):
+        pass
     def open_add_dialog(self):
         dialog = AddEquipementDialog(self)
         dialog.exec_()
@@ -150,6 +181,7 @@ class App(QWidget):
         category_id = self.categorie_table.item(row, 0).text()
         try:
             cursor = connection.cursor()
+            cursor.execute("DELETE FROM sous_categorie WHERE id_cat = %s", (category_id,))
             cursor.execute("DELETE FROM categorie WHERE id_cat = %s", (category_id,))
             connection.commit()
             cursor.close()
