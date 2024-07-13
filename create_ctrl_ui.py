@@ -9,6 +9,7 @@
 
 from show_tables import *
 from PyQt5 import QtCore, QtGui, QtWidgets
+import datetime
 
 
 class Ui_Dialog(object):
@@ -86,7 +87,7 @@ class Ui_Dialog(object):
         self.comboBox_4_auditeur.setObjectName("comboBox_4_auditeur")
 
         self.retranslateUi(Dialog)
-        self.buttonBox2.accepted.connect(Dialog.accept) # type: ignore
+        self.buttonBox2.accepted.connect(self.accept) # type: ignore
         self.buttonBox2.rejected.connect(Dialog.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         self.load_data()
@@ -110,10 +111,13 @@ class Ui_Dialog(object):
 
     def load_data(self):
         self.comboBox_type.addItem("- - select - -")
+        self.comboBox_4_auditeur.addItem("- - select - -")
         for row in fetch_type_combo():
             libele = row[0]
             self.comboBox_type.addItem(libele)
-
+        for row in fetch_auditeur():
+            libele = row[0]
+            self.comboBox_4_auditeur.addItem(libele)
         """for freq, periode in fetch_frequence_combo():
             self.comboBox_2_freq.addItem(str(freq) +" "+ periode)
 
@@ -141,13 +145,42 @@ class Ui_Dialog(object):
         if not freq:
             return
         freq = freq.split(" ")
-        print(freq)
         frequence=id_freq(freq[0],freq[1])
-        print(frequence)
         for row in fetch_equipement2_combo(str(temp),str(frequence)):
             libele=row[0]
             self.comboBox_3_equip.addItem(libele)
 
+    def accept(self):
+        print("saved")
+        type = self.comboBox_type.currentText()
+        temp = id_type(type)
+        freq = self.comboBox_2_freq.currentText()
+        freq = freq.split(" ")
+        frequence = id_freq(freq[0], freq[1])
+        equip= self.comboBox_3_equip.currentText()
+        equipe=id_equip(equip)
+        org=self.comboBox_4_auditeur.currentText()
+        orga=id_org(org)
+        date_ech=self.lineEdit_date_ech.text()
+        date_ctrl=self.lineEdit_3_date_ctrl.text()
+        date_plan=self.lineEdit_2_date_plan.text()
+        if not date_ech:
+            QtWidgets.QMessageBox.warning(None, "Input Error", "tu dois entrer la date d'echeance.")
+            return
+        try:
+            date_ech = datetime.datetime.strptime(date_ech, "%Y-%m-%d").strftime("%Y-%m-%d")
+            date_ctrl = datetime.datetime.strptime(date_ctrl, "%Y-%m-%d").strftime("%Y-%m-%d")
+            date_plan = datetime.datetime.strptime(date_plan, "%Y-%m-%d").strftime("%Y-%m-%d")
+        except ValueError:
+            print("Invalid date format. Please use YYYY-MM-DD.")
+            return
+        execute_query(connection, f"INSERT INTO controles (date_echeance, date_planifie, date_ctrl, id_org, id_type, id_freq) VALUES ('{date_ech}', '{date_plan}','{date_ctrl}',{orga},{temp},{frequence});")
+        cursor = connection.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        ctrl_id=cursor.fetchone()[0]
+        execute_query(connection,f"INSERT INTO assoc_id_idctrl (id, id_ctrl) VALUES ({equipe},{ctrl_id});")
+        cursor.close()
+        QtWidgets.QApplication.quit()
 
 if __name__ == "__main__":
     import sys

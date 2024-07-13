@@ -94,6 +94,20 @@ def id_freq(freq, per):
     cursor.close()
     return types[0][0]
 
+def id_equip(equip):
+    cursor = connection.cursor()
+    cursor.execute("SELECT id FROM equipement where libele=\'" + equip + "\'")
+    equipe = cursor.fetchall()
+    cursor.close()
+    return equipe[0][0]
+
+def id_org(org):
+    cursor = connection.cursor()
+    cursor.execute("SELECT id_org FROM organisme where nom=\'" + org + "\'")
+    orgs = cursor.fetchall()
+    cursor.close()
+    return orgs[0][0]
+
 def fetch_frequence_combo():
     cursor = connection.cursor()
     cursor.execute("SELECT frequence, periode FROM frequence")
@@ -114,3 +128,10 @@ def fetch_equipement2_combo(type, freq):
     freqs = cursor.fetchall()
     cursor.close()
     return freqs
+
+def fetch_auditeur():
+    cursor = connection.cursor()
+    cursor.execute("SELECT nom FROM organisme")
+    org = cursor.fetchall()
+    cursor.close()
+    return org
