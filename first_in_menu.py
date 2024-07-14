@@ -236,8 +236,8 @@ class App(QWidget):
         self.tab_widget.setCurrentWidget(self.sous_categorie_tab)
 
 
-if __name__ == '__main__':
+"""if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
     ex.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec_())"""

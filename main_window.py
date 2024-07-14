@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import *
-from main import *
+from first_in_menu import *
 from create_ctrl_ui import Ui_Dialog2 as CreateCtrlDialog
 
 class MainWindow(QMainWindow):
@@ -54,7 +54,8 @@ class MainWindow(QMainWindow):
             self.central_widget.open_equipement_tab()
         except Exception as e:
             print(f"Error opening equipment tab: {e}")
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     mainWin = MainWindow()
     mainWin.show()
