@@ -1,4 +1,3 @@
-#import mysql.connector
 from connexion import *
 from mysql.connector import Error
 

@@ -1,14 +1,14 @@
-from show_tables import *
 import sys
 from PyQt5.QtWidgets import *
-from add_cat import *
 from modify import *
+from show_tables import *
+from add_cat import *
 from modify_category import *
 from Add_equi import *
 import warnings
 from PyQt5.QtCore import Qt
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-
+from show_controls import *
 class App(QWidget):
     def __init__(self):
         super().__init__()
@@ -71,7 +71,7 @@ class App(QWidget):
                 modify_button.clicked.connect(lambda _, r=i: self.modify_sous_categorie_row(r))
             table.setCellWidget(i, len(headers), modify_button)
             #modify_button.clicked.connect(lambda _, r=i: ModifyEquipementDialog.modify_row(r))  # Connect to your modify function
-            table.setCellWidget(i, len(headers), modify_button)
+            #table.setCellWidget(i, len(headers), modify_button)
 
             # Create Delete button
             delete_button = QPushButton("Delete")
@@ -126,14 +126,16 @@ class App(QWidget):
         return widget
 
     def sous_categorie_win(self):
-        widget = QWidget()
-        layout = QVBoxLayout()
+        try:
+            widget = QWidget()
+            layout = QVBoxLayout()
 
-        self.sous_categorie_table = self.create_table(fetch_sous_categories(), ["id", "Libelle", "id_cat"],
-                                                      "sous_categorie")
-        layout.addWidget(self.sous_categorie_table)
+            self.sous_categorie_table = self.create_table(fetch_sous_categories(), ["id", "Libelle", "id_cat"],"sous_categorie")
+            layout.addWidget(self.sous_categorie_table)
 
-        widget.setLayout(layout)
+            widget.setLayout(layout)
+        except Exception as e:
+            print(e)
         return widget
     def delete_sous_categorie_row(self, row):
         sous_categorie_id = self.sous_categorie_table.item(row, 0).text()
@@ -150,7 +152,7 @@ class App(QWidget):
         print("delete sous_categorie and its category is clicked")
 
     def modify_sous_categorie_row(self):
-        pass
+        print("j ai pas encore implementé modifier sous categorie")
     def open_add_dialog(self):
         dialog = AddEquipementDialog(self)
         dialog.exec_()
@@ -235,7 +237,10 @@ class App(QWidget):
         self.tab_widget.addTab(self.sous_categorie_tab, "Sous Categories")  # Add tab if not already added
         self.tab_widget.setCurrentWidget(self.sous_categorie_tab)
 
-
+    def show_controls(self):
+        controls_widget = ControlsWidget()
+        self.tab_widget.addTab(controls_widget, "Show Controls")
+        self.tab_widget.setCurrentWidget(controls_widget)
 """if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
