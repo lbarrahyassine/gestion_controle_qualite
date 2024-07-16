@@ -4,7 +4,7 @@ import sys
 from PyQt5.QtWidgets import *
 from add_cat import *
 from Add_equi import *"""
-from modify import *
+from modify_equipement import *
 
 class AddEquipementDialog(QDialog):
     def __init__(self, parent=None):
@@ -14,6 +14,7 @@ class AddEquipementDialog(QDialog):
         self.layout = QFormLayout()
 
         self.libelle_input = QLineEdit()
+        self.libelle_input.setPlaceholderText("libelle")
         self.id_sous_cat_input = QLineEdit()
         self.date_service_input = QLineEdit()
         #self.actif_input = QLineEdit()

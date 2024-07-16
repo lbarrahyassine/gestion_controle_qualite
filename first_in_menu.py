@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import *
-from modify import *
+from modify_equipement import *
 from show_tables import *
 from add_cat import *
 from modify_category import *
@@ -119,6 +119,8 @@ class App(QWidget):
         layout.addWidget(self.equipements_table)
 
         ajouter_button = QPushButton("Ajouter")
+        ajouter_button.setMinimumHeight(40)
+        ajouter_button.setStyleSheet("background-color:#C3C0C0;")
         ajouter_button.clicked.connect(self.open_add_dialog)  # Connect the button to a function
         layout.addWidget(ajouter_button)
 
