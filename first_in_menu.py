@@ -175,6 +175,8 @@ class App(QWidget):
         layout.addWidget(self.categorie_table)
 
         ajouter_button2 = QPushButton("Ajouter")
+        ajouter_button2.setMinimumHeight(40)
+        ajouter_button2.setStyleSheet("background-color:#C3C0C0;")
         ajouter_button2.clicked.connect(self.show_add_cat_dialog)  # Connect the button to a function
         layout.addWidget(ajouter_button2)
 

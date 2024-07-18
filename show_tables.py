@@ -92,6 +92,12 @@ def id_freq(freq, per):
     types = cursor.fetchall()
     cursor.close()
     return types[0][0]
+def freq_from_id(id_freq):
+    cursor = connection.cursor()
+    cursor.execute("SELECT frequence, periode FROM frequence where id_freq=\'" + id_freq +"\'")
+    types = cursor.fetchall()
+    cursor.close()
+    return types[0][0]
 
 def id_equip(equip):
     cursor = connection.cursor()

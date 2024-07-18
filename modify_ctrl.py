@@ -11,7 +11,6 @@ class ModifyDialog(QDialog):
         super().__init__(parent)
         self.row_data = row_data
         self.setupUi()
-
     def setupUi(self):
         self.setObjectName("ModifyDialog")
         self.resize(400, 300)
@@ -52,22 +51,24 @@ class ModifyDialog(QDialog):
                 return datetime.strptime(date_value_probably_string, "%Y-%m-%d").date()
             return date_value_probably_string
 
-        date_echeance = parse_date(self.row_data[1])
-        date_planifie = parse_date(self.row_data[2])
-        date_ctrl = parse_date(self.row_data[3])
-
+        date_echeance = parse_date(self.row_data[2])
+        date_planifie = parse_date(self.row_data[3])
+        date_ctrl = parse_date(self.row_data[4])
+        #self.equipe.setText(self.row_data[0])
         self.date_echeance.setText(
             date_echeance.strftime("%Y-%m-%d") if isinstance(date_echeance, date) else str(date_echeance))
-        self.date_planifie.setText(
-            date_planifie.strftime("%Y-%m-%d") if isinstance(date_planifie, date) else str(date_planifie))
+        if date_planifie is not None:
+            self.date_planifie.setText(
+                date_planifie.strftime("%Y-%m-%d") if isinstance(date_planifie, date) else str(date_planifie))
 
         if date_ctrl is None:
             self.date_ctrl.clear()  # Clear the date edit to show as empty
         else:
             self.date_ctrl.setDate(date_ctrl)
-        self.id_org.setText(str(self.row_data[4]))
-        self.id_type.setText(str(self.row_data[5]))
-        self.id_freq.setText(str(self.row_data[6]))
+        self.id_org.setText(str(self.row_data[5]))
+        self.id_type.setText(str(self.row_data[6]))
+        self.id_freq.setText(str(self.row_data[7]))
+        #self.id.setText(str(self.row_data[0]))
 
 
     def get_data(self):
@@ -75,7 +76,9 @@ class ModifyDialog(QDialog):
             date_ctrl = None
         else:
             date_ctrl = self.date_ctrl.date().toString("yyyy-MM-dd")
+
         return [
+            #self.equipe.text(),
             self.date_echeance.text(),
             self.date_planifie.text(),
             date_ctrl,
