@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+
 from PyQt5.QtWidgets import QDateEdit, QMessageBox
 from show_tables import *
 from PyQt5 import QtCore, QtGui, QtWidgets
 import datetime
-
+from mysql.connector import Error
 class Ui_Dialog2(object):
+    def __init__(self):
+        self.dialog = None  # Initialize the dialog reference
     def setupUi(self, Dialog):
+        self.dialog = Dialog
         Dialog.setObjectName("Dialog")
         Dialog.resize(655, 715)
         self.buttonBox2 = QtWidgets.QDialogButtonBox(Dialog)
@@ -98,6 +102,7 @@ class Ui_Dialog2(object):
         self.buttonBox2.accepted.connect(self.accept)  # type: ignore
         self.buttonBox2.rejected.connect(Dialog.reject)  # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+
         self.load_data()
 
         self.comboBox_type.currentIndexChanged.connect(self.update_load_freq)
@@ -149,64 +154,64 @@ class Ui_Dialog2(object):
             self.comboBox_3_equip.addItem(libele)
 
     def accept(self):
-        try:
-            type = self.comboBox_type.currentText()
-            temp = id_type(type)
-            freq = self.comboBox_2_freq.currentText()
-            freq = freq.split(" ")
-            frequence = id_freq(freq[0], freq[1])
-            equip = self.comboBox_3_equip.currentText()
-            equipe = id_equip(equip)
-            org = self.comboBox_4_auditeur.currentText()
-            orga = id_org(org)
-            date_ech = self.date_ech_input.date().toString("yyyy-MM-dd")
-            date_ctrl = self.lineEdit_3_date_ctrl.text()
-            date_plan = self.lineEdit_2_date_plan.text()
+        type = self.comboBox_type.currentText()
+        temp = id_type(type)
+        freq = self.comboBox_2_freq.currentText()
+        freq = freq.split(" ")
+        frequence = id_freq(freq[0], freq[1])
+        equip = self.comboBox_3_equip.currentText()
+        equipe = id_equip(equip)
+        org = self.comboBox_4_auditeur.currentText()
+        orga = id_org(org)
+        date_ech = self.date_ech_input.date().toString("yyyy-MM-dd")
+        date_ctrl = self.lineEdit_3_date_ctrl.text()
+        date_plan = self.lineEdit_2_date_plan.text()
 
-            if not date_ech:
-                QMessageBox.warning(None, "Input Error", "tu dois entrer la date d'echeance.")
+        if not date_ech:
+            QMessageBox.warning(None, "Input Error", "tu dois entrer la date d'echeance.")
+            return
+
+        if not date_ctrl:
+            date_ctrl = "NULL"
+        else:
+            try:
+                date_ctrl = f"'{datetime.datetime.strptime(date_ctrl, '%Y-%m-%d').strftime('%Y-%m-%d')}'"
+            except ValueError:
+                QtWidgets.QMessageBox.warning(None, "Input Error",
+                                              "Format de date invalide pour date du controle, utilise YYYY-MM-DD.")
                 return
 
-            if not date_ctrl:
-                date_ctrl = "NULL"
-            else:
-                try:
-                    date_ctrl = f"'{datetime.datetime.strptime(date_ctrl, '%Y-%m-%d').strftime('%Y-%m-%d')}'"
-                except ValueError:
-                    QtWidgets.QMessageBox.warning(None, "Input Error",
-                                                  "Format de date invalide pour date du controle, utilise YYYY-MM-DD.")
-                    return
+        try:
+            date_ech = datetime.datetime.strptime(date_ech, "%Y-%m-%d").strftime("%Y-%m-%d")
+        except ValueError:
+            QMessageBox.warning(None, "Input Error",
+                                "Format de date invalide pour date echeance, utilise YYYY-MM-DD.")
+            return
 
+        if date_plan:
             try:
-                date_ech = datetime.datetime.strptime(date_ech, "%Y-%m-%d").strftime("%Y-%m-%d")
+                date_plan = f"'{datetime.datetime.strptime(date_plan, '%Y-%m-%d').strftime('%Y-%m-%d')}'"
             except ValueError:
                 QMessageBox.warning(None, "Input Error",
-                                    "Format de date invalide pour date echeance, utilise YYYY-MM-DD.")
+                                    "Format de date invalide pour date planifie, utilise YYYY-MM-DD.")
                 return
+        else:
+            date_plan = 'NULL'
+            try:
+                execute_query(connection, f"INSERT INTO controles (date_echeance, date_planifie, date_ctrl, id_org, id_type, id_freq) VALUES ('{date_ech}', {date_plan},{date_ctrl},{orga},{temp},{frequence});")
+                cursor = connection.cursor()
+                cursor.execute("SELECT LAST_INSERT_ID();")
+                ctrl_id = cursor.fetchone()[0]
+                execute_query(connection,f"INSERT INTO assoc_id_idctrl (id, id_ctrl) VALUES ({equipe},{ctrl_id});")
+                cursor.close()
+                QMessageBox.information(None, "Success", "Controle ajouté avec succès!")
 
-            if date_plan:
-                try:
-                    date_plan = datetime.datetime.strptime(date_plan, "%Y-%m-%d").strftime("%Y-%m-%d")
-                except ValueError:
-                    QMessageBox.warning(None, "Input Error",
-                                        "Format de date invalide pour date planifie, utilise YYYY-MM-DD.")
-                    return
-            else:
-                date_plan = None
+                self.dialog.accept()
+            except Exception as e:
+                print(f"Error: {e}")
 
-            execute_query(connection, f"INSERT INTO controles (date_echeance, date_planifie, date_ctrl, id_org, id_type, id_freq) VALUES ('{date_ech}', '{date_plan}',{date_ctrl},{orga},{temp},{frequence});")
-            cursor = connection.cursor()
-            cursor.execute("SELECT LAST_INSERT_ID();")
-            ctrl_id = cursor.fetchone()[0]
-            execute_query(connection,f"INSERT INTO assoc_id_idctrl (id, id_ctrl) VALUES ({equipe},{ctrl_id});")
-            cursor.close()
 
-            QMessageBox.information(None, "Success", "Controle ajouté avec succès!")
-            QtWidgets.QApplication.quit()
 
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            QMessageBox.critical(None, "Error", f"An error occurred: {e}")
 
 
 if __name__ == "__main__":

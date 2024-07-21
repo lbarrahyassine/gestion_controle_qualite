@@ -3,12 +3,14 @@ from show_tables import execute_query, id_equip, freq_from_id
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
-
+from pdf_dialogs import *
 from PyQt5 import QtGui
 from connexion import *
 from modify_ctrl import *
 from statut import *
 from datetime import *
+from PyQt5.QtGui import QIcon
+import os
 from create_ctrl_ui import Ui_Dialog2 as CreateCtrlDialog
 
 
@@ -23,14 +25,14 @@ class ControlsWidget(QWidget):
         self.tableWidget = QTableWidget(self)
         self.layout.addWidget(self.tableWidget)
 
-        self.tableWidget.setColumnCount(10)  # 8 data columns + 1 for the button + 1 statut
+        self.tableWidget.setColumnCount(11)  # 8 data columns + 1 for the button + 1 statut + 1 pdf
         self.tableWidget.setHorizontalHeaderLabels(
-            ["equip","id_ctrl", "date_echeance", "date_planifie", "date_ctrl", "id_org", "id_type", "id_freq", "Modify", "Statut"])
+            ["equip","id_ctrl", "date_echeance", "date_planifie", "date_ctrl", "id_org", "id_type", "id_freq", "Modify", "Statut", "pdf"])
 
     def load_data(self):
         cursor = connection.cursor()
         cursor.execute(
-            "SELECT libele, controles.id_ctrl, date_echeance, date_planifie, date_ctrl, id_org, id_type, id_freq FROM controles JOIN assoc_id_idctrl ON controles.id_ctrl =assoc_id_idctrl.id_ctrl  join equipement on assoc_id_idctrl.id = equipement.id")
+            "SELECT libele, controles.id_ctrl, date_echeance, date_planifie, date_ctrl, id_org, id_type, id_freq, pdf FROM controles JOIN assoc_id_idctrl ON controles.id_ctrl =assoc_id_idctrl.id_ctrl  join equipement on assoc_id_idctrl.id = equipement.id")
         rows = cursor.fetchall()
 
         self.tableWidget.setRowCount(len(rows))
@@ -57,6 +59,20 @@ class ControlsWidget(QWidget):
             else:
                 statut_item.setBackground(QtGui.QColor(255,153,51))
             self.tableWidget.setItem(row_idx, 9, statut_item)
+
+            # Check if PDF exists
+            pdf_data=row[-1]
+
+            if pdf_data:
+                pdf_icon_button = QPushButton()
+                pdf_icon_button.setIcon(QIcon("pdf_icon.png"))
+                pdf_icon_button.clicked.connect(lambda _, ctrl_id=row[1]: self.view_pdf(ctrl_id))
+                self.tableWidget.setCellWidget(row_idx, 10, pdf_icon_button)
+            else:
+                pdf_button = QPushButton("Add PDF")
+                pdf_button.clicked.connect(lambda _, ctrl_id=row[1]: self.add_pdf(ctrl_id))
+                self.tableWidget.setCellWidget(row_idx, 10, pdf_button)
+
         cursor.close()
 
     def modify_row(self, row_data):
@@ -109,4 +125,14 @@ class ControlsWidget(QWidget):
         finally:
             cursor.close()
 
+    def add_pdf(self, ctrl_id):
+        pdf_import_dialog = PDFImportDialog(ctrl_id)
+        pdf_import_dialog.exec_()
+        self.load_data()
 
+    def view_pdf(self, ctrl_id):
+        try :
+            pdf_viewer = PDFViewerDialog(ctrl_id)
+            pdf_viewer.exec_()
+        except Exception as e:
+            print(e)

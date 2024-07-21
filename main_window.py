@@ -9,7 +9,7 @@ class MainWindow(QMainWindow):
         self.title = 'Main Window'
         self.left = 100
         self.top = 100
-        self.width = 1300
+        self.width = 1400
         self.height = 700
         self.initUI()
 
